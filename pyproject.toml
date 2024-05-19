@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "ppml-project"
+version = "0.1.0"
+description = "An attempt to create an ML model that can detect skin cancer in encrypted images"
+authors = ["Carter <cartermarkegard@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+torch = "^2.3.0"
+torchvision = "^0.18.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
