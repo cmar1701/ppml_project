@@ -1,13 +1,16 @@
 import torch
+import tenseal
+from PIL import Image
 from glob import glob
+from pandas import DataFrame
 from torchvision.io import read_image
-
+from torchvision.transforms.v2 import Resize
+from torchvision.transforms import InterpolationMode
 
 class SkinCancerMNISTDataset:
     """A class to create a Dataset of skin lesion images and corresponding labels"""
     
-    def __init__(self, df):
-        self.dx_to_integer_map = {
+    dx_to_integer_map = {
             'nv': 0,
             'mel': 1,
             'bkl': 2,
@@ -16,9 +19,12 @@ class SkinCancerMNISTDataset:
             'vasc': 5,
             'df': 6,
         }
-        
-        self.image_ids = df["image_id"]
-        self.labels = df["dx"].apply(lambda x: self.dx_to_integer_map[x])
+
+    def __init__(self, metadata: DataFrame, device: torch.device, tenseal_context: tenseal.Context | None = None):
+        self.device = device
+        self.tenseal_context = tenseal_context
+        self.image_ids = metadata["image_id"]
+        self.labels = metadata["dx"].apply(lambda x: self.dx_to_integer_map[x])
 
         self.image_id_to_filename_map = {}
         for image_filename in glob("data/HAM10000_images_part*/*.jpg"):
@@ -27,13 +33,13 @@ class SkinCancerMNISTDataset:
             self.image_id_to_filename_map[image_id] = image_filename
 
     def __getitem__(self, idx):
-        one_hot_encoding = torch.zeros(len(self.dx_to_integer_map))
+        one_hot_encoding = torch.zeros(len(self.dx_to_integer_map), device=self.device)
         one_hot_encoding[self.labels.iloc[idx]] = 1.0
         label = one_hot_encoding
         
         image_id = self.image_ids.iloc[idx]
         image_filename = self.image_id_to_filename_map[image_id]
-        image = read_image(image_filename).type(torch.FloatTensor)
+        image = read_image(image_filename).type(torch.FloatTensor).to(device=self.device)
 
         return image, label
 
