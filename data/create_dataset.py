@@ -39,7 +39,13 @@ class SkinCancerMNISTDataset:
         
         image_id = self.image_ids.iloc[idx]
         image_filename = self.image_id_to_filename_map[image_id]
-        image = read_image(image_filename).type(torch.FloatTensor).to(device=self.device)
+
+        if self.tenseal_context is None:
+            image = read_image(image_filename).type(torch.FloatTensor).to(device=self.device)
+        else:
+            unencrypted_image = Image.open(image_filename)
+            downsampled_unencrypted_image = Resize(40, interpolation=InterpolationMode.BILINEAR)(unencrypted_image)
+            image = tenseal.ckks_tensor(self.tenseal_context, downsampled_unencrypted_image)
 
         return image, label
 
